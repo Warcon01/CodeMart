@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <title>Admin Dashboard - CodeMart</title>
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="stylesheet" href="/static/css/bootstrap.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700,400italic|Roboto:400,300,700" rel="stylesheet">
+  <style>
+    /* Center content vertically and horizontally */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    .dashboard-container {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+<div class="container dashboard-container">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 text-center">
+      <h2>Admin Dashboard</h2>
+      <p>Welcome, Admin! Here you can manage products and view orders.</p>
+      <div style="margin-top:20px;">
+        <a href="/admin/products" class="btn btn-info">Manage Products</a>
+        <a href="/admin/orders" class="btn btn-success">View Orders</a>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="text-center" style="margin-top:50px;">
+  <p><small>&copy; 2025. Made by Adi M. | Vladislav Z. | Abzal O.</small></p>
+</footer>
+</body>
+</html>

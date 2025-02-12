@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <title>Profile - CodeMart</title>
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="stylesheet" href="/static/css/bootstrap.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700,400italic|Roboto:400,300,700" rel="stylesheet">
+</head>
+<body>
+<div class="container" style="max-width:600px; margin-top:40px;">
+  <h2 class="text-center">Your Profile</h2>
+  {{if .Error}}
+  <div class="alert alert-danger">{{.Error}}</div>
+  {{end}}
+  {{if .Success}}
+  <div class="alert alert-success">{{.Success}}</div>
+  {{end}}
+
+  <!-- Display the email (read-only) -->
+  <div class="form-group">
+    <label>Email:</label>
+    <p class="form-control-static">{{.User.Email}}</p>
+  </div>
+
+  <!-- Form for updating profile details -->
+  <form method="POST" action="/profile">
+    <div class="form-group">
+      <label for="name">First Name</label>
+      <input type="text" class="form-control" id="name" name="name" value="{{.User.Name}}" placeholder="Enter your first name">
+    </div>
+    <div class="form-group">
+      <label for="surname">Surname</label>
+      <input type="text" class="form-control" id="surname" name="surname" value="{{.User.Surname}}" placeholder="Enter your surname">
+    </div>
+    <div class="form-group">
+      <label for="address">Address</label>
+      <textarea class="form-control" id="address" name="address" placeholder="Enter your address">{{.User.Address}}</textarea>
+    </div>
+    <hr>
+    <h4>Change Password</h4>
+    <div class="form-group">
+      <label for="current_password">Current Password</label>
+      <input type="password" class="form-control" id="current_password" name="current_password" placeholder="Enter your current password">
+    </div>
+    <div class="form-group">
+      <label for="new_password">New Password</label>
+      <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Enter new password">
+    </div>
+    <div class="form-group">
+      <label for="confirm_password">Confirm New Password</label>
+      <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm new password">
+    </div>
+    <button type="submit" class="btn btn-primary">Update Profile</button>
+  </form>
+  <hr>
+  <div class="text-center">
+    <a href="/logout" class="btn btn-danger">Logout</a>
+  </div>
+</div>
+</body>
+</html>

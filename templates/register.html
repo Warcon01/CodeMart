@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Register - CodeMart</title>
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
+    <link href="http://fonts.googleapis.com/css?family=Playfair+Display:400,700,400italic|Roboto:400,300,700" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/animate.css">
+    <link rel="stylesheet" href="/static/css/icomoon.css">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/modernizr-2.6.2.min.js"></script>
+    <!--[if lt IE 9]>
+    <script src="/static/js/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<header id="fh5co-header">
+    <div class="container-fluid">
+        <div class="row">
+            <a href="#" class="js-fh5co-nav-toggle fh5co-nav-toggle"><i></i></a>
+            <ul class="fh5co-social">
+                <li><a href="#"><i class="icon-twitter"></i></a></li>
+                <li><a href="#"><i class="icon-facebook"></i></a></li>
+                <li><a href="#"><i class="icon-instagram"></i></a></li>
+            </ul>
+            <div class="col-lg-12 col-md-12 text-center">
+                <h1 id="fh5co-logo"><a href="/">CodeMart<sup>TM</sup></a></h1>
+            </div>
+        </div>
+    </div>
+</header>
+<div class="container" style="margin-top: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    {{if .Error}}
+                    <div class="alert alert-danger">{{.Error}}</div>
+                    {{end}}
+                    <h3 class="card-title text-center">Register</h3>
+                    <form id="register-form" method="POST" action="/register">
+                        <div class="mb-3">
+                            <label for="reg-email" class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" id="reg-email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-password" class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" id="reg-password" placeholder="Enter your password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-password-confirm" class="form-label">Confirm Password</label>
+                            <input type="password" name="password_confirm" class="form-control" id="reg-password-confirm" placeholder="Confirm your password" required>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <p>Already have an account? <a href="/login">Log In</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<footer id="fh5co-footer">
+    <p><small>&copy; 2025. Made by Adi M. | Vladislav Z. | Abzal O.</small></p>
+</footer>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/jquery.easing.1.3.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/jquery.waypoints.min.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>
