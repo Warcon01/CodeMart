@@ -15,20 +15,23 @@
     <tr>
       <th>ID</th>
       <th>Name</th>
+      <th>Category</th>
       <th>Price</th>
-      <th>Image URL</th>
       <th>Actions</th>
     </tr>
     </thead>
     <tbody>
     {{range .Products}}
-    <tr id="product-{{.ID}}">
+    <tr>
       <td>{{.ID}}</td>
       <td>{{.Name}}</td>
+      <td>{{.Category}}</td>
       <td>{{.Price}}₸</td>
-      <td>{{.ImageURL}}</td>
       <td>
-        <button class="btn btn-danger btn-xs delete-product" data-productid="{{.ID}}">Delete</button>
+        <form action="/admin/product/delete" method="POST">
+          <input type="hidden" name="product_id" value="{{.ID}}">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
       </td>
     </tr>
     {{end}}

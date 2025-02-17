@@ -1,171 +1,73 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>CodeMart</title>
-	<meta property="og:title" content="CodeMart - Online Store" />
-	<meta property="og:image" content="/static/images/og-image.png" />
-	<meta property="og:url" content="https://codemart.com" />
-	<meta property="og:site_name" content="CodeMart" />
-	<meta property="og:description" content="Best place to buy chocolates and snacks!" />
-	<meta name="twitter:title" content="CodeMart - Best Online Store" />
-	<meta name="twitter:image" content="/static/images/twitter-image.png" />
-	<meta name="twitter:url" content="https://codemart.com" />
-	<meta name="twitter:card" content="summary_large_image" />
-	<link rel="shortcut icon" href="/static/favicon.ico">
-	<link href="https://fonts.googleapis.com/css?family=Playfair+Display:400,700,400italic|Roboto:400,300,700" rel="stylesheet" type="text/css">
-	<!-- CSS Files -->
-	<link rel="stylesheet" href="/static/css/animate.css">
-	<link rel="stylesheet" href="/static/css/icomoon.css">
-	<link rel="stylesheet" href="/static/css/bootstrap.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CodeMart - Home</title>
+	<!-- Bootstrap & Custom CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="/static/css/style.css">
-	<!-- Modernizr JS -->
-	<script src="/static/js/modernizr-2.6.2.min.js"></script>
-	<!--[if lt IE 9]>
-	<script src="/static/js/respond.min.js"></script>
-	<![endif]-->
 </head>
 <body>
-<!-- Offcanvas Section (if needed) -->
-<div id="fh5co-offcanvas">
-	<a href="#" class="fh5co-close-offcanvas js-fh5co-close-offcanvas">
-		<span><i class="icon-cross3"></i><span>Close</span></span>
-	</a>
-	<div class="fh5co-bio">
-		<figure>
-			<img src="/static/images/user.png" alt="Default User" class="img-responsive">
-		</figure>
-		<h2>You are not authorised user</h2>
-		<p>Wanna login?</p>
-		<a href="/login" class="btn btn-primary">Login</a>
-	</div>
-	<div class="fh5co-menu">
-		<div class="fh5co-box">
-			<h3 class="heading">Categories</h3>
-			<ul>
-				<li><a href="#">Food</a></li>
-				<li><a href="#">Drink</a></li>
-				<li><a href="#">Chocolate</a></li>
-				<li><a href="#">Fruits</a></li>
-				<li><a href="#">Vegetables</a></li>
-				<li><a href="#">Bakery</a></li>
-				<li><a href="#">Snacks</a></li>
-			</ul>
+
+<!-- Header -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
+	<div class="container d-flex justify-content-between align-items-center">
+		<div class="container text-center">
+			<a class="navbar-brand fw-bold fs-3 text-dark" href="/">CodeMart<span class="fs-5">™</span></a>
+		</div>
+
+		<div class="d-flex align-items-center">
+			{{if .IsLoggedIn}}
+			<a class="btn btn-outline-secondary me-2" href="/profile">👤 Profile</a>
+			{{else}}
+			<a class="btn btn-outline-secondary me-2" href="/login">🔑 Login</a>
+			{{end}}
+			<a class="btn btn-outline-primary me-2" href="/basket">🛒 Cart</a>
+			<a class="btn btn-warning fw-bold" href="/checkout">✅ Checkout</a>
 		</div>
 	</div>
-</div>
-<!-- END Offcanvas -->
+</nav>
 
-<!-- Header Section -->
-<header id="fh5co-header">
+<!-- Categories Navigation Bar -->
+<div class="categories-container">
 	<div class="container">
-		<div class="row" style="padding: 20px 0;">
-			<!-- Logo Column -->
-			<div class="col-sm-4">
-				<h1 id="fh5co-logo"><a href="/">CodeMart<sup>TM</sup></a></h1>
-			</div>
-			<!-- Navigation and Basket Column -->
-			<div class="col-sm-8 text-right">
-				<!-- Navigation Links (Login/Profile) -->
-				<div class="btn-group" role="group" style="margin-right: 15px;">
-					<a href="/login" class="btn btn-primary">Login</a>
-					<a href="/profile" class="btn btn-primary">Profile</a>
-				</div>
-				<!-- Basket Information -->
-				<div class="basket-container" style="display: inline-block; vertical-align: middle; margin-right: 15px;">
-					<a href="/basket" class="basket-icon">
-						<i class="icon-cart"></i>
-						<span id="basket-count">0</span>
-					</a>
-				</div>
-				<div class="basket-total" style="display: inline-block; vertical-align: middle; margin-right: 15px; color: #333;">
-					Total: <span id="basket-total">0₸</span>
-				</div>
-				<div style="display: inline-block; vertical-align: middle;">
-					<a href="/purchase_history" class="btn btn-primary">Checkout</a>
-				</div>
-			</div>
+		<div class="categories-list">
+			<a href="/category?category=Food" class="category-btn">Food</a>
+			<a href="/category?category=Drink" class="category-btn">Drink</a>
+			<a href="/category?category=Chocolate" class="category-btn">Chocolate</a>
+			<a href="/category?category=Fruits" class="category-btn">Fruits</a>
+			<a href="/category?category=Vegetables" class="category-btn">Vegetables</a>
+			<a href="/category?category=Bakery" class="category-btn">Bakery</a>
+			<a href="/category?category=Snacks" class="category-btn">Snacks</a>
 		</div>
 	</div>
-</header>
-<!-- END Header -->
-
-<!-- Main Content: Product Listing -->
-<main>
-	<div class="container" style="margin-top: 40px;">
-		<div class="row">
-			{{range .Products}}
-			<article class="col-lg-3 col-md-4 col-sm-6 col-xs-12 animate-box">
-				<figure>
-					<a href="/product?id={{.ID}}">
-						<img src="{{.ImageURL}}" alt="{{.Name}}" class="img-responsive" onerror="this.onerror=null; this.src='/static/images/placeholder.png';">
-					</a>
-				</figure>
-				<h2 class="fh5co-article-title">
-					<a href="/product?id={{.ID}}">{{.Name}}</a>
-				</h2>
-				<span class="fh5co-meta fh5co-date">{{.Price}}₸</span>
-				<button class="btn btn-primary add-to-basket" data-productid="{{.ID}}" data-name="{{.Name}}" data-price="{{.Price}}">
-					Add to Basket
-				</button>
-			</article>
-			{{end}}
-			{{if not (gt (len .Products) 0)}}
-			<p>No products available.</p>
-			{{end}}
-		</div>
-	</div>
-</main>
-
-<!-- Optional Admin Dashboard Link -->
-{{if .IsAdmin}}
-<div class="container" style="margin-top:20px; text-align: center;">
-	<a href="/admin/dashboard" class="btn btn-primary">Admin Dashboard</a>
 </div>
-{{end}}
 
-<!-- Footer Section -->
-<footer id="fh5co-footer" class="text-center" style="padding: 20px 0; margin-top: 40px;">
-	<p><small>&copy; 2025. Made by Adi M. | Vladislav Z. | Abzal O.</small></p>
+
+<!-- Product Listing -->
+<div class="container mt-4">
+	<h2 class="text-center mb-4 fw-bold">Our Products</h2>
+	<div class="row justify-content-center">
+		{{range .Products}}
+		<div class="col-md-3">
+			<div class="card shadow-sm">
+				<img src="{{.ImageURL}}" class="product-thumbnail card-img-top" alt="{{.Name}}">
+				<div class="card-body text-center">
+					<h5 class="card-title">{{.Name}}</h5>
+					<p class="card-text">Price: {{.Price}}₸</p>
+					<a href="/product?id={{.ID}}" class="btn btn-primary">View Details</a>
+				</div>
+			</div>
+		</div>
+		{{end}}
+	</div>
+</div>
+
+<!-- Footer -->
+<footer class="footer text-center bg-white text-dark py-3 mt-5 shadow-sm">
+	<p class="mb-0">© 2025. Made by <b>Adi M.</b> | <b>Vladislav Z.</b> | <b>Abzal O.</b></p>
 </footer>
 
-<!-- JavaScript Files (loaded once with absolute paths) -->
-<script src="/static/js/jquery.min.js"></script>
-<script src="/static/js/jquery.easing.1.3.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/jquery.waypoints.min.js"></script>
-<script src="/static/js/main.js"></script>
-<script>
-	$(document).ready(function(){
-		// Handle "Add to Basket" button clicks
-		$('.add-to-basket').click(function(){
-			var btn = $(this);
-			var productID = btn.data('productid');
-			var name = btn.data('name');
-			var price = btn.data('price');
-			$.post('/api/cart/add', { product_id: productID, name: name, price: price, quantity: 1 })
-					.done(function(data) {
-						updateBasketCount();
-					})
-					.fail(function(xhr, status, error){
-						console.error('Error:', status, error);
-						alert('Failed to add item.');
-					});
-		});
-
-		// Function to update the basket count from the API
-		function updateBasketCount() {
-			fetch('/api/cart')
-					.then(response => response.json())
-					.then(data => {
-						let count = data.Items ? data.Items.length : 0;
-						document.getElementById('basket-count').textContent = count;
-					})
-					.catch(error => console.error('Error:', error));
-		}
-		updateBasketCount();
-	});
-</script>
 </body>
 </html>

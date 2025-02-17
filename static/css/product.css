@@ -1,0 +1,99 @@
+/* General Page Styling */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #fdfdfd;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Main Content Wrapper */
+.container {
+    flex: 1;
+}
+
+/* Navbar */
+.navbar {
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 24px;
+    text-align: center;
+}
+
+/* Center Header */
+.navbar .text-center {
+    flex-grow: 1;
+    text-align: center;
+}
+
+/* Product Detail Page */
+.product-detail-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Quantity Input */
+#quantity {
+    text-align: center;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    padding: 12px 20px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+    padding: 12px 20px;
+    font-weight: bold;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Footer */
+.footer {
+    background-color: #ffffff;
+    color: black;
+    text-align: center;
+    padding: 15px;
+    font-size: 14px;
+    box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.1);
+    margin-top: auto; /* Pushes footer to bottom */
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+
+    .navbar .btn {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .product-detail-image {
+        max-height: 250px;
+    }
+}

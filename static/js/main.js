@@ -252,4 +252,42 @@
 		document.getElementById('city-dropdown').style.display = 'none';
 	}
 
+	// Toggle Sidebar
+	function toggleCategorySidebar() {
+		let sidebar = document.getElementById("category-sidebar");
+		sidebar.classList.toggle("open");
+	}
+
+// Filter Products by Category
+	function filterProducts(category) {
+		fetch(`/api/products?category=${category}`)
+			.then(response => response.json())
+			.then(data => {
+				let container = document.getElementById("product-list");
+				container.innerHTML = "";
+
+				data.Products.forEach(product => {
+					let productHTML = `
+                    <article class="col-lg-3 col-md-4 col-sm-6 col-xs-12 animate-box">
+                        <figure>
+                            <a href="/product?id=${product.ID}">
+                                <img src="${product.ImageURL}" alt="${product.Name}" class="img-responsive">
+                            </a>
+                        </figure>
+                        <h2 class="fh5co-article-title">
+                            <a href="/product?id=${product.ID}">${product.Name}</a>
+                        </h2>
+                        <span class="fh5co-meta fh5co-date">${product.Price}₸</span>
+                        <button class="btn btn-primary add-to-basket" 
+                            data-productid="${product.ID}" 
+                            data-name="${product.Name}" 
+                            data-price="${product.Price}">
+                            Add to Basket
+                        </button>
+                    </article>`;
+					container.innerHTML += productHTML;
+				});
+			})
+			.catch(error => console.error("Error loading products:", error));
+	}
 }());

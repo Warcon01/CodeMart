@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta charset="utf-8">
+    <title>Manage Orders - Admin - CodeMart</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="container" style="margin-top: 20px;">
+    <h2>Manage Orders</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>User ID</th>
+            <th>Created At</th>
+            <th>Items</th>
+            <th>Total Price</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .Orders}}
+        <tr>
+            <td>{{.OrderID}}</td>
+            <td>{{.UserID}}</td>
+            <td>{{.CreatedAt}}</td>
+            <td>
+                <ul>
+                    {{range .Items}}
+                    <li>{{.ProductName}} x {{.Quantity}} ({{.Price}}₸ each)</li>
+                    {{end}}
+                </ul>
+            </td>
+            <td>{{.TotalPrice}}₸</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

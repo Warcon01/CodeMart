@@ -38,12 +38,12 @@ type User struct {
 	Address  string
 }
 
-// CartItem represents an item in the user's shopping cart.
+// CartItem представляет товар в корзине.
 type CartItem struct {
-	ProductID int
-	Name      string
-	Price     int
-	Quantity  int
+	ProductID int    `json:"product_id"`
+	Name      string `json:"name"`
+	Price     int    `json:"price"`
+	Quantity  int    `json:"quantity"`
 }
 
 // OrderItem represents an item purchased in an order.
@@ -56,9 +56,11 @@ type OrderItem struct {
 
 // OrderWithItems represents an order along with its purchased items.
 type OrderWithItems struct {
-	OrderID   int
-	CreatedAt time.Time
-	Items     []OrderItem
+	OrderID    int
+	UserID     int
+	CreatedAt  time.Time
+	Items      []OrderItem
+	TotalPrice int
 }
 
 func main() {
@@ -110,12 +112,14 @@ func main() {
 	r.HandleFunc("/logout", logoutHandler).Methods("GET")
 	r.HandleFunc("/register", registerHandler).Methods("GET", "POST")
 	r.HandleFunc("/profile", profileHandler).Methods("GET", "POST")
-	r.HandleFunc("/product", productHandler).Methods("GET")
 	r.HandleFunc("/admin/product/add", adminAddProductHandler).Methods("GET", "POST")
 	r.HandleFunc("/admin/product/delete", adminDeleteProductHandler).Methods("POST")
 	r.HandleFunc("/admin/products", adminProductsHandler).Methods("GET")
 	r.HandleFunc("/admin/dashboard", adminDashboardHandler).Methods("GET")
+	r.HandleFunc("/admin/orders", adminOrdersHandler).Methods("GET")
 	r.HandleFunc("/basket", basketHandler).Methods("GET")
+	r.HandleFunc("/product", productHandler).Methods("GET")
+	r.HandleFunc("/category", categoryHandler).Methods("GET")
 
 	// New endpoints for cart and purchase history.
 	r.HandleFunc("/api/cart", apiCartHandler).Methods("GET")
@@ -123,6 +127,7 @@ func main() {
 	r.HandleFunc("/api/cart/delete", apiDeleteFromCartHandler).Methods("POST")
 	r.HandleFunc("/checkout", checkoutHandler).Methods("POST")
 	r.HandleFunc("/purchase_history", purchaseHistoryHandler).Methods("GET")
+	r.HandleFunc("/api/products", apiProductsHandler).Methods("GET")
 
 	// Determine the port to listen on.
 	portEnv := os.Getenv("PORT")
@@ -138,6 +143,7 @@ func main() {
 type Product struct {
 	ID          int
 	Name        string
+	Category    string
 	Price       int
 	ImageURL    string
 	Description string
@@ -187,9 +193,10 @@ func sendReceiptEmail(userEmail string, order OrderWithItems) error {
 
 // homeHandler renders the homepage with a simple product listing.
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	// Query the products from the database.
+	// Fetch products from the database
 	rows, err := db.Query("SELECT id, name, price, image_url, description FROM products ORDER BY created_at DESC")
 	if err != nil {
+		log.Println("Error fetching products from database:", err)
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
@@ -205,19 +212,22 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		products = append(products, p)
 	}
 
-	// Retrieve admin flag from session if needed.
+	// Check if the user is logged in
 	session, _ := store.Get(r, "session")
-	isAdmin := false
-	if v, ok := session.Values["is_admin"].(bool); ok {
-		isAdmin = v
+	isLoggedIn := false
+	if _, ok := session.Values["user_id"].(int); ok {
+		isLoggedIn = true
 	}
 
-	// Pass the products and admin flag to the template.
+	// Pass data to the template
 	data := map[string]interface{}{
-		"Products": products,
-		"IsAdmin":  isAdmin,
+		"Products":   products,
+		"IsLoggedIn": isLoggedIn, // Login status flag
 	}
+
+	// Render the template
 	if err := tpl.ExecuteTemplate(w, "index.html", data); err != nil {
+		log.Println("Error rendering template:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -473,41 +483,11 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// productHandler displays product details.
-// (In a real application, product details would be fetched from the database.)
-func productHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		http.Error(w, "Product id not provided", http.StatusBadRequest)
-		return
-	}
-
-	type Product struct {
-		ID          int
-		Name        string
-		Price       int
-		ImageURL    string
-		Description string
-	}
-	product := Product{
-		ID:          1,
-		Name:        "Coca Cola Classic",
-		Price:       500,
-		ImageURL:    "https://gippo.kz/wp-content/uploads/2021/06/CC_500ml_PET.jpg",
-		Description: "Refreshing classic taste.",
-	}
-
-	if err := tpl.ExecuteTemplate(w, "product.html", product); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 // adminAddProductHandler handles GET and POST requests for adding new products.
 func adminAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 
-	// Check if the user is logged in and is an admin.
-	// For example, we expect session.Values["is_admin"] to be set to true for an admin.
+	// Проверяем, что юзер - админ.
 	isAdmin, ok := session.Values["is_admin"].(bool)
 	if !ok || !isAdmin {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -515,22 +495,19 @@ func adminAddProductHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == http.MethodGet {
-		// Render the product addition form.
-		if err := tpl.ExecuteTemplate(w, "admin_add_product.html", nil); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		tpl.ExecuteTemplate(w, "admin_add_product.html", nil)
 		return
 	}
 
-	// For POST: process the form submission.
+	// Получаем данные из формы.
 	name := r.FormValue("name")
+	category := r.FormValue("category")
 	description := r.FormValue("description")
 	priceStr := r.FormValue("price")
 	imageURL := r.FormValue("image_url")
 
-	// Validate required fields.
-	if name == "" || priceStr == "" || imageURL == "" {
-		tpl.ExecuteTemplate(w, "admin_add_product.html", map[string]string{"Error": "Please fill in all required fields."})
+	if name == "" || category == "" || priceStr == "" || imageURL == "" {
+		tpl.ExecuteTemplate(w, "admin_add_product.html", map[string]string{"Error": "All fields are required."})
 		return
 	}
 
@@ -540,15 +517,15 @@ func adminAddProductHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert the new product into the database.
-	_, err = db.Exec("INSERT INTO products (name, description, price, image_url, created_at) VALUES ($1, $2, $3, $4, $5)",
-		name, description, price, imageURL, time.Now())
+	// Сохраняем товар в БД.
+	_, err = db.Exec("INSERT INTO products (name, category, description, price, image_url, created_at) VALUES ($1, $2, $3, $4, $5, NOW())",
+		name, category, description, price, imageURL)
+
 	if err != nil {
-		tpl.ExecuteTemplate(w, "admin_add_product.html", map[string]string{"Error": "Error inserting product: " + err.Error()})
+		tpl.ExecuteTemplate(w, "admin_add_product.html", map[string]string{"Error": "Error adding product."})
 		return
 	}
 
-	// On success, show a success message.
 	tpl.ExecuteTemplate(w, "admin_add_product.html", map[string]string{"Success": "Product added successfully!"})
 }
 
@@ -589,7 +566,7 @@ func adminProductsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query("SELECT id, name, price, image_url FROM products ORDER BY created_at DESC")
+	rows, err := db.Query("SELECT id, name, category, price, image_url FROM products ORDER BY created_at DESC")
 	if err != nil {
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
@@ -599,7 +576,7 @@ func adminProductsHandler(w http.ResponseWriter, r *http.Request) {
 	var products []Product
 	for rows.Next() {
 		var p Product
-		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageURL); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Category, &p.Price, &p.ImageURL); err != nil {
 			log.Println("Error scanning product:", err)
 			continue
 		}
@@ -641,7 +618,19 @@ func basketHandler(w http.ResponseWriter, r *http.Request) {
 			cart = c
 		}
 	}
-	data := map[string]interface{}{"Cart": cart}
+
+	// Check if the user is logged in
+	isLoggedIn := false
+	if _, ok := session.Values["user_id"].(int); ok {
+		isLoggedIn = true
+	}
+
+	// Pass data to the template
+	data := map[string]interface{}{
+		"Cart":       cart,
+		"IsLoggedIn": isLoggedIn, // Login status flag
+	}
+
 	if err := tpl.ExecuteTemplate(w, "basket.html", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -651,51 +640,50 @@ func basketHandler(w http.ResponseWriter, r *http.Request) {
 func apiCartHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 	var cart []CartItem
+
+	// Извлекаем корзину из сессии
 	if session.Values["cart"] != nil {
-		if c, ok := session.Values["cart"].([]CartItem); ok {
-			cart = c
-		}
+		cart, _ = session.Values["cart"].([]CartItem)
 	}
+
+	// Отправляем корзину в JSON-формате
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"Items": cart})
+	json.NewEncoder(w).Encode(map[string]interface{}{"items": cart})
 }
 
 // apiAddToCartHandler adds a product to the cart.
 // It expects form values: product_id, name, price, and optionally quantity.
 func apiAddToCartHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Received product_id:", r.FormValue("product_id"))
 	session, _ := store.Get(r, "session")
-	productIDStr := r.FormValue("product_id")
-	name := r.FormValue("name")
-	priceStr := r.FormValue("price")
-	quantityStr := r.FormValue("quantity")
 
-	productID, err := strconv.Atoi(productIDStr)
+	// Получаем данные из запроса
+	productID, err := strconv.Atoi(r.FormValue("product_id"))
 	if err != nil {
-		http.Error(w, "Invalid product id", http.StatusBadRequest)
+		http.Error(w, "Invalid product_id", http.StatusBadRequest)
 		return
 	}
-	price, err := strconv.Atoi(priceStr)
+	name := r.FormValue("name")
+	price, err := strconv.Atoi(r.FormValue("price"))
 	if err != nil {
 		http.Error(w, "Invalid price", http.StatusBadRequest)
 		return
 	}
-	quantity := 1
-	if quantityStr != "" {
-		q, err := strconv.Atoi(quantityStr)
-		if err == nil && q > 0 {
+	quantity := 1 // По умолчанию 1
+	if q, err := strconv.Atoi(r.FormValue("quantity")); err == nil && q > 0 {
+		if q > 1 {
+			quantity = quantity + q - 1
+		} else {
 			quantity = q
 		}
 	}
 
+	// Получаем текущую корзину
 	var cart []CartItem
 	if session.Values["cart"] != nil {
-		if c, ok := session.Values["cart"].([]CartItem); ok {
-			cart = c
-		}
+		cart, _ = session.Values["cart"].([]CartItem)
 	}
 
-	// Check if the product is already in the cart; if so, increase its quantity.
+	// Проверяем, есть ли товар уже в корзине
 	found := false
 	for i, item := range cart {
 		if item.ProductID == productID {
@@ -704,6 +692,8 @@ func apiAddToCartHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+
+	// Если товара нет в корзине, добавляем его
 	if !found {
 		cart = append(cart, CartItem{
 			ProductID: productID,
@@ -713,8 +703,11 @@ func apiAddToCartHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// Сохраняем корзину в сессию
 	session.Values["cart"] = cart
 	session.Save(r, w)
+
+	// Отправляем ответ
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
@@ -723,29 +716,33 @@ func apiAddToCartHandler(w http.ResponseWriter, r *http.Request) {
 // apiDeleteFromCartHandler removes an item from the session cart.
 func apiDeleteFromCartHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
-	productIDStr := r.FormValue("product_id")
-	productID, err := strconv.Atoi(productIDStr)
+
+	// Получаем ID товара
+	productID, err := strconv.Atoi(r.FormValue("product_id"))
 	if err != nil {
-		http.Error(w, "Invalid product id", http.StatusBadRequest)
+		http.Error(w, "Invalid product_id", http.StatusBadRequest)
 		return
 	}
 
+	// Получаем текущую корзину
 	var cart []CartItem
 	if session.Values["cart"] != nil {
-		if c, ok := session.Values["cart"].([]CartItem); ok {
-			cart = c
-		}
+		cart, _ = session.Values["cart"].([]CartItem)
 	}
 
-	var newCart []CartItem
+	// Удаляем товар из корзины
+	newCart := []CartItem{}
 	for _, item := range cart {
 		if item.ProductID != productID {
 			newCart = append(newCart, item)
 		}
 	}
 
+	// Обновляем сессию
 	session.Values["cart"] = newCart
 	session.Save(r, w)
+
+	// Отправляем ответ
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
@@ -915,6 +912,163 @@ func purchaseHistoryHandler(w http.ResponseWriter, r *http.Request) {
 func renderTemplateWithError(w http.ResponseWriter, tmpl string, errorMsg string) {
 	data := map[string]string{"Error": errorMsg}
 	if err := tpl.ExecuteTemplate(w, tmpl, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func adminOrdersHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+	isAdmin, ok := session.Values["is_admin"].(bool)
+	if !ok || !isAdmin {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	rows, err := db.Query("SELECT id, user_id, created_at FROM orders ORDER BY created_at DESC")
+	if err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var orders []OrderWithItems
+	for rows.Next() {
+		var order OrderWithItems
+		if err := rows.Scan(&order.OrderID, &order.UserID, &order.CreatedAt); err != nil {
+			continue
+		}
+
+		// Получаем товары внутри заказа
+		itemRows, err := db.Query("SELECT product_id, product_name, quantity, price FROM order_items WHERE order_id = $1", order.OrderID)
+		if err == nil {
+			defer itemRows.Close()
+			totalPrice := 0 // Переносим подсчет суммы сюда
+			for itemRows.Next() {
+				var item OrderItem
+				if err := itemRows.Scan(&item.ProductID, &item.ProductName, &item.Quantity, &item.Price); err == nil {
+					order.Items = append(order.Items, item)
+					totalPrice += item.Quantity * item.Price // Считаем сумму заказа
+				}
+			}
+			order.TotalPrice = totalPrice // Добавляем итоговую сумму в структуру
+		}
+
+		orders = append(orders, order)
+	}
+
+	data := map[string]interface{}{
+		"Orders": orders,
+	}
+
+	if err := tpl.ExecuteTemplate(w, "admin_orders.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func productHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session")
+
+	productID := r.URL.Query().Get("id")
+	if productID == "" {
+		http.Error(w, "Product ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var product Product
+	err := db.QueryRow("SELECT id, name, price, image_url, description FROM products WHERE id = $1", productID).
+		Scan(&product.ID, &product.Name, &product.Price, &product.ImageURL, &product.Description)
+
+	if err != nil {
+		http.Error(w, "Product not found", http.StatusNotFound)
+		return
+	}
+
+	isLoggedIn := false
+	if _, ok := session.Values["user_id"].(int); ok {
+		isLoggedIn = true
+	}
+
+	// Pass data to the template
+	data := map[string]interface{}{
+		"Product":    product,
+		"IsLoggedIn": isLoggedIn, // Login status flag
+	}
+
+	if err := tpl.ExecuteTemplate(w, "product.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func apiProductsHandler(w http.ResponseWriter, r *http.Request) {
+	category := r.URL.Query().Get("category")
+
+	query := "SELECT id, name, price, image_url FROM products"
+	var rows *sql.Rows
+	var err error
+
+	if category != "" && category != "All" {
+		query += " WHERE category = $1"
+		rows, err = db.Query(query, category)
+	} else {
+		rows, err = db.Query(query)
+	}
+
+	if err != nil {
+		http.Error(w, "Error retrieving products", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var products []Product
+	for rows.Next() {
+		var p Product
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageURL); err != nil {
+			continue
+		}
+		products = append(products, p)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{"Products": products})
+}
+
+func categoryHandler(w http.ResponseWriter, r *http.Request) {
+	category := r.URL.Query().Get("category")
+	if category == "" {
+		http.Error(w, "Category not specified", http.StatusBadRequest)
+		return
+	}
+
+	rows, err := db.Query("SELECT id, name, price, image_url FROM products WHERE category = $1", category)
+	if err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var products []Product
+	for rows.Next() {
+		var p Product
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageURL); err != nil {
+			log.Println("Error scanning product:", err)
+			continue
+		}
+		products = append(products, p)
+	}
+
+	session, _ := store.Get(r, "session")
+	isLoggedIn := false
+	if _, ok := session.Values["user_id"]; ok {
+		isLoggedIn = true
+	}
+
+	data := map[string]interface{}{
+		"Category":   category,
+		"Products":   products,
+		"IsLoggedIn": isLoggedIn,
+	}
+
+	if err := tpl.ExecuteTemplate(w, "category.html", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
